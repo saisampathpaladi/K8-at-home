@@ -1,0 +1,79 @@
+---
+- name: Install Rancher Kubernetes on AWS EC2
+  hosts: localhost
+  gather_facts: false
+  vars:
+    aws_region: "your_aws_region"
+    instance_type: "t2.medium"
+    ami_id: "your_ami_id"
+    key_name: "your_key_pair_name"
+    security_group: "your_security_group_id"
+    subnet_id: "your_subnet_id"
+    rancher_version: "latest"  # or specify a version like "v2.6.4"
+    admin_password: "your_admin_password"
+
+  tasks:
+    - name: Provision EC2 instance
+      ec2_instance:
+        region: "{{ aws_region }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ ami_id }}"
+        key_name: "{{ key_name }}"
+        group_id: "{{ security_group }}"
+        subnet_id: "{{ subnet_id }}"
+        wait: true
+        assign_public_ip: yes
+      register: ec2
+
+    - name: Wait for SSH to become available
+      wait_for:
+        host: "{{ ec2.instances.0.public_ip }}"
+        port: 22
+        delay: 10
+        timeout: 300
+
+    - name: Install Docker
+      become: true
+      ansible.builtin.yum:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      become: true
+      ansible.builtin.service:
+        name: docker
+        state: started
+
+    - name: Install Rancher Kubernetes
+      become: true
+      community.general.docker_compose:
+        project_src: /tmp
+        project_name: rancher
+        recreate: yes
+        pull: yes
+        definition:
+          version: "2"
+          services:
+            rancher:
+              image: "rancher/rancher:{{ rancher_version }}"
+              ports:
+                - "80:80"
+                - "443:443"
+              environment:
+                - "MYSQL_ROOT_PASSWORD={{ admin_password }}"
+                - "MYSQL_USER=admin"
+                - "MYSQL_PASSWORD={{ admin_password }}"
+                - "MYSQL_DATABASE=cattle"
+              volumes:
+                - "/var/lib/mysql"
+                - "/var/lib/rancher"
+              restart: always
+
+    - name: Wait for Rancher to start
+      uri:
+        url: "http://{{ ec2.instances.0.public_ip }}/ping"
+        return_content: yes
+      register: result
+      until: result.status == 200
+      retries: 30
+      delay: 10

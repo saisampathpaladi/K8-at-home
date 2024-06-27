@@ -3,14 +3,15 @@
   hosts: localhost
   gather_facts: false
   vars:
-    aws_region: "your_aws_region"
-    instance_type: "t2.medium"
-    ami_id: "your_ami_id"
-    key_name: "your_key_pair_name"
-    security_group: "your_security_group_id"
-    subnet_id: "your_subnet_id"
-    rancher_version: "latest"  # or specify a version like "v2.6.4"
-    admin_password: "your_admin_password"
+    # Default AWS settings (modify as needed)
+    aws_region: "your_aws_region"  # Modify: Set your AWS region (e.g., "us-east-1")
+    instance_type: "t2.medium"     # Modify: Set your desired instance type (e.g., "t2.large")
+    ami_id: "your_ami_id"          # Modify: Set your desired AMI ID (e.g., "ami-12345678")
+    key_name: "your_key_pair_name" # Modify: Set your key pair name for SSH access
+    security_group: "default"      # Modify: Set your security group ID (or "default" for default SG)
+    subnet_id: "subnet-12345678"   # Modify: Set your subnet ID for EC2 instance placement
+    rancher_version: "latest"      # Modify: Set the Rancher version to install (e.g., "v2.6.4")
+    admin_password: "your_admin_password"  # Modify: Set your desired admin password for Rancher
 
   tasks:
     - name: Provision EC2 instance
@@ -77,3 +78,4 @@
       until: result.status == 200
       retries: 30
       delay: 10
+

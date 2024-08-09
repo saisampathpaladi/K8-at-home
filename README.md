@@ -1,6 +1,6 @@
 ## K8s-at-home
 
-This repository provides instructions for setting up a Kubernetes cluster at home for learning and experimentation purposes. It supports both Windows and Linux systems.
+This repository provides instructions for setting up rancher for Kubernetes cluster at home for learning and experimentation purposes. It supports both Windows and Linux systems.
 
 **Prerequisites**
 
